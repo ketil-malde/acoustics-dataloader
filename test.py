@@ -24,7 +24,7 @@ iterd = IterableDataset(exfile, 10, 10)
 
 loader = DataLoader(iterd, batch_size=2)
 for batch in islice(loader, 3):
-    print(batch)
+    print(len(batch))
 
 print('Tiled')    
 tiled = TiledDataset(exfile, 10, 10)
@@ -34,4 +34,6 @@ tiled = TiledDataset(exfile, 10, 10)
 
 loader = DataLoader(tiled, batch_size=2)
 for batch in islice(loader, 3):
-    print(batch)
+    print(len(batch))
+
+

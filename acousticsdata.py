@@ -1,7 +1,7 @@
 
 from torch.utils.data import Dataset, DataLoader, IterableDataset
 from random import randrange
-import zarr
+import xarray
 
 class IterableDataset(IterableDataset):
     def __init__(self, datafiles, psize, rsize, type='zarr'):
@@ -14,8 +14,10 @@ class IterableDataset(IterableDataset):
            Returns a stream of random rectangles with sv values
         '''
 
-        zf = zarr.open(datafiles)
+        zf = xarray.open_zarr(datafiles)
         self.sv = zf.sv
+        self.pts  = zf.ping_time
+        self.rngs = zf.range
         self.shape = zf.sv.shape
         self.psize = psize
         self.rsize = rsize
@@ -29,15 +31,17 @@ class IterableDataset(IterableDataset):
             y = randrange(0, maxrng-self.rsize)
             
             rect = self.sv[:, x:x+self.psize, y:y+self.rsize]
-            yield rect, (x, y)
+            yield rect, (self.pts[x+self.psize//2], self.rngs[y+self.rsize//2])(x, y)
 
 class TiledDataset(Dataset):
     '''Splitting an acoustic data set into tiles of given size'''
 
     def __init__(self, datafiles, psize, rsize, type='zarr'):
 
-        zf = zarr.open(datafiles)
+        zf = xarray.open_zarr(datafiles)
         self.sv = zf.sv
+        self.pts  = zf.ping_time
+        self.rngs = zf.range
         self.shape = zf.sv.shape
         self.psize = psize
         self.rsize = rsize
@@ -64,4 +68,4 @@ class TiledDataset(Dataset):
         y = r * self.rsize
 
         rect = self.sv[:, x:x+self.psize, y:y+self.rsize]
-        return rect, (x, y)
+        return rect, (self.pts[x+self.psize//2], self.rngs[y+self.rsize//2])
